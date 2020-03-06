@@ -31,3 +31,8 @@
   grid-row: 2 / span 1;
   grid-column: 1 / span 3;
 }
+
+.alerts {
+  grid-row: 3 / span 1;
+  grid-column: 1 / span 3;
+}

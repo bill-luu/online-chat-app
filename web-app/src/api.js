@@ -21,6 +21,10 @@ export function requestToChangeNickName(newNickName) {
     socket.emit('changeNickNameRequest', newNickName)
 }
 
+export function requestToChangeColor(newColor) {
+    socket.emit('changeNickColorRequest', newColor)
+}
+
 export function subscribeNickNameChangeFailed(cb) {
     socket.on('changeNickNameFailed', reason => cb(reason));
 }

@@ -6,7 +6,12 @@ import Collapse from '@material-ui/core/Collapse';
 
 import MessagesComponent from './MessagesComponent'
 import UsersListComponent from './UsersListComponent'
-import { sendMessage, subscribeToUserInfo, requestToChangeNickName, subscribeNickNameChangeFailed } from './api'
+import { 
+  sendMessage,
+  subscribeToUserInfo,
+  requestToChangeNickName,
+  subscribeNickNameChangeFailed,
+  requestToChangeColor } from './api'
 
 import './App.css';
 
@@ -19,7 +24,10 @@ class App extends React.Component {
       username: "",
       color: "#FFFFFF",
 
-      showNameChangeFailed: false
+      showNameChangeFailed: false,
+      nameChangeFailedReason: "",
+      
+      showColorChangeFailed: false
     }
   }
 
@@ -47,10 +55,23 @@ class App extends React.Component {
     if(evt.key === "Enter") {
       let nickChangeRegex = /^\/nick (.*)/
       let nickChangeRegexArray = nickChangeRegex.exec(this.state.message)
+
+      let nickChangeColorRegex = /^\/(nickcolor) (.*)/
+      let nickChangeColorRegexArray = nickChangeColorRegex.exec(this.state.message)
       
       if(nickChangeRegexArray !== null) {
         requestToChangeNickName(nickChangeRegexArray[1])
-      } else {
+      } else if (nickChangeColorRegexArray !== null) {
+        let hexCodeRegex = /^([A-Fa-f0-9]{6})/
+        let hexCodeRegexArray = hexCodeRegex.exec(nickChangeColorRegexArray[2])
+
+        if (hexCodeRegexArray !== null) {
+          requestToChangeColor(hexCodeRegexArray[0])
+        } else {
+          this.setState({ showColorChangeFailed: true })
+        }
+
+      }else {
         sendMessage({
           message: this.state.message,
           username: this.state.username,
@@ -68,6 +89,12 @@ class App extends React.Component {
       nameChangeFailedReason: ""
     })
   }
+
+  handleColorChangeFailedAlertClose() {
+    this.setState({
+      showColorChangeFailed: false,
+    })
+  }
   
   render() {
     return (
@@ -82,12 +109,18 @@ class App extends React.Component {
             value={this.state.message}
             onKeyPress={(evt) => this.onKeyPress(evt)}
             onChange={(evt) => this.onMessageChange(evt)}/>
-
-          <Collapse in={this.state.showNameChangeFailed}>
-            <Alert severity="error" onClose= {() => this.handleNameChangeFailedAlertClose()}>
-              Name Change Failed: {this.state.nameChangeFailedReason}
-            </Alert>
-          </Collapse>
+          <div className="alerts">
+            <Collapse in={this.state.showNameChangeFailed}>
+              <Alert severity="error" onClose= {() => this.handleNameChangeFailedAlertClose()}>
+                Name Change Failed: {this.state.nameChangeFailedReason}
+              </Alert>
+            </Collapse>
+            <Collapse in={this.state.showColorChangeFailed}>
+              <Alert severity="error" onClose={() => this.handleColorChangeFailedAlertClose()}>
+                Color Change Failed: Command Format: /nickcolor RRGGBB
+              </Alert>
+            </Collapse>
+          </div>
         </div>
       </div>
     );

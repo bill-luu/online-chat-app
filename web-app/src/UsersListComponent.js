@@ -2,11 +2,19 @@ import React from 'react';
 import './UsersListComponent.css';
 import { subscribeToUsersList } from './api'
 
+function User(props) {
+    return (
+        <div>
+            <span>{props.user}</span>
+        </div>
+    )
+}
+
 class UsersListComponent extends React.Component {
     constructor(props) {
         super(props)
         this.state = {
-            users: [""]
+            users: []
         }
     }
 
@@ -23,7 +31,7 @@ class UsersListComponent extends React.Component {
                 <div className="users users-order">
                     {this.state.users.map(user => {
                         return (
-                            <span key={user}>{user}</span>
+                            <User key={user} user={user}></User>
                         )
                     })}
                 </div>

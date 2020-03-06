@@ -88,6 +88,14 @@ io.on('connection', (client) => {
     }
   })
 
+  client.on("changeNickColorRequest", (newColor) => {
+    usercolor = newColor;
+    client.emit('userInfo', {
+      username: username,
+      color: usercolor
+    })
+  })
+
   client.on('disconnect', () => {
     var index = currentUsers.indexOf(username);
     if (index !== -1) currentUsers.splice(index, 1);
