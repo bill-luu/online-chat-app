@@ -1,38 +1,33 @@
 .App {
-  text-align: center;
+  height: 100%;
 }
 
-.App-logo {
-  height: 40vmin;
-  pointer-events: none;
+.chatbox {
+  display: grid;
+  grid-template-columns: 1fr 1fr 1fr;
+  grid-template-rows: 80% 20%;
+  grid-column-gap: 20px;
+  grid-row-gap: 10px;
+
+  height: 80%;
+  width: 80%;
+  margin: auto;
+
+  background: grey;
 }
 
-@media (prefers-reduced-motion: no-preference) {
-  .App-logo {
-    animation: App-logo-spin infinite 20s linear;
-  }
+.messageBox {
+  grid-column: 1 / span 2;
+  grid-row: 1 / span 1;
+  outline-style: dotted;
 }
 
-.App-header {
-  background-color: #282c34;
-  min-height: 100vh;
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  justify-content: center;
-  font-size: calc(10px + 2vmin);
-  color: white;
+.userList {
+  grid-column: 3 / span 1;
+  grid-row: 1 / span 1;
 }
 
-.App-link {
-  color: #61dafb;
-}
-
-@keyframes App-logo-spin {
-  from {
-    transform: rotate(0deg);
-  }
-  to {
-    transform: rotate(360deg);
-  }
+.userInput {
+  grid-row: 2 / span 1;
+  grid-column: 1 / span 3;
 }
