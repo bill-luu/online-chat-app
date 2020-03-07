@@ -30,6 +30,7 @@ let lastNames = [
 ]
 
 let currentUsers = []
+let userID = 0
 
 function generateUniqueName() {
   let foundUniqueName = false;
@@ -39,8 +40,7 @@ function generateUniqueName() {
     const lastName = lastNames[Math.floor(Math.random() * lastNames.length)];
   
     name = firstName + "-" + lastName;
-    if(!currentUsers.includes(name)) {
-      currentUsers.push(name)
+    if(!currentUsers.some(user => user.username === name)) {
       foundUniqueName = true;
     }
   }
@@ -48,14 +48,24 @@ function generateUniqueName() {
   return name;
 }
 
+function emitUserInfo(client, username, usercolor, clientID) {
+  client.emit('userInfo', {
+    username: username,
+    color: usercolor,
+    userID: clientID,
+  })
+}
+
 io.on('connection', (client) => {
   let username = generateUniqueName()
   let usercolor = Math.floor(Math.random() * 16777215).toString(16)
-
-  client.emit('userInfo', {
+  let clientID = userID++
+  currentUsers.push({
     username: username,
-    color: usercolor
+    userID: clientID
   })
+
+  emitUserInfo(client, username, usercolor, clientID)
 
   client.emit('messages', messages)
 
@@ -67,22 +77,24 @@ io.on('connection', (client) => {
       username: message.username,
       color: message.color,
       message: message.message,
+      userID: clientID,
     }
     messages.push(newMessage)
     io.emit('messages', messages)
   })
 
   client.on("changeNickNameRequest", (newNickName) => {
-    if(currentUsers.includes(newNickName)) {
+    if (currentUsers.some(user => user.name === newNickName)) {
       client.emit('changeNickNameFailed', "This name is already taken")
     } else {
-      currentUsers.splice(currentUsers.indexOf(username), 1, newNickName);
+      for (let i in currentUsers) {
+        if(currentUsers[i].username === username) {
+          currentUsers[i].username = newNickName
+        }
+      }
       username = newNickName
 
-      client.emit('userInfo', {
-        username: username,
-        color: usercolor
-      })
+      emitUserInfo(client, username, usercolor, clientID)
       io.emit('userlist', currentUsers)
       
     }
@@ -90,14 +102,17 @@ io.on('connection', (client) => {
 
   client.on("changeNickColorRequest", (newColor) => {
     usercolor = newColor;
-    client.emit('userInfo', {
-      username: username,
-      color: usercolor
-    })
+    emitUserInfo(client, username, usercolor, clientID)
   })
 
   client.on('disconnect', () => {
-    var index = currentUsers.indexOf(username);
+    let index = -1;
+    for (let i in currentUsers) {
+      if (currentUsers[i].userID === clientID) {
+        index = i;
+      }
+    }
+
     if (index !== -1) currentUsers.splice(index, 1);
     io.emit('userlist', currentUsers)
   })

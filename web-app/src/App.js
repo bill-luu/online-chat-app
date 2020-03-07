@@ -22,6 +22,7 @@ class App extends React.Component {
     this.state = {
       message: "",
       username: "",
+      clientID: -1,
       color: "#FFFFFF",
 
       showNameChangeFailed: false,
@@ -34,7 +35,8 @@ class App extends React.Component {
   componentDidMount() {
     subscribeToUserInfo((err, userInfo) => {
       this.setState({ username: userInfo.username,
-                      color: "#" + userInfo.color })
+                      color: "#" + userInfo.color,
+                      clientID: userInfo.userID })
     })
 
     subscribeNickNameChangeFailed((reason) => {
@@ -100,7 +102,7 @@ class App extends React.Component {
     return (
       <div className="App">
         <div className="chatbox">
-          <MessagesComponent username={this.state.username}/>
+          <MessagesComponent username={this.state.username} clientID={this.state.clientID}/>
           <UsersListComponent/>
           <TextField 
             className="userInput"

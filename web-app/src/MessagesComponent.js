@@ -3,12 +3,25 @@ import './MessagesComponent.css';
 import { subscribeToMessageList } from './api';
 
 function Message(props) {
+
+    let messageStyle = {
+        'fontWeight': 'normal'
+    }
+
+    if (props.clientID === props.userID) {
+        messageStyle = {
+            'fontWeight': 'bold'
+        }
+    }
     return(
         <div>
             <span>
-                {props.timestamp} <span style={{color: props.color}}>
-                    {props.username}:
-                </span> {props.message}
+                {props.timestamp + " "}
+                <span style={messageStyle}>
+                    <span style={{color: props.color}}>
+                        {props.username}:
+                    </span> {props.message}
+                </span>
             </span>
         </div>
     )
@@ -39,7 +52,9 @@ class MessagesComponent extends React.Component {
                                         timestamp={message.timestamp} 
                                         username={message.username}
                                         color={message.color}
-                                        message={message.message} />
+                                        message={message.message}
+                                        userID={message.userID}
+                                        clientID={this.props.clientID}/>
                             )
                         })}
                     </div>
