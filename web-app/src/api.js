@@ -28,3 +28,7 @@ export function requestToChangeColor(newColor) {
 export function subscribeNickNameChangeFailed(cb) {
     socket.on('changeNickNameFailed', reason => cb(reason));
 }
+
+export function checkIfUserExists(userInfo) {
+    socket.emit('userInfoCheck', userInfo)
+}

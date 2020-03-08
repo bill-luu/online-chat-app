@@ -11,32 +11,47 @@ import {
   subscribeToUserInfo,
   requestToChangeNickName,
   subscribeNickNameChangeFailed,
-  requestToChangeColor } from './api'
+  requestToChangeColor,
+  checkIfUserExists } from './api'
 
+import { withCookies, Cookies } from 'react-cookie'
 import './App.css';
 
 class App extends React.Component {
 
   constructor(props) {
     super(props)
+    const { cookies } = props;
+    console.log(cookies)
     this.state = {
       message: "",
-      username: "",
-      clientID: -1,
-      color: "#FFFFFF",
+      username: cookies.get('username') || "",
+      clientID: cookies.get('clientID') || -1,
+      color: cookies.get('usercolor') || "#FFFFFF",
 
       showNameChangeFailed: false,
       nameChangeFailedReason: "",
       
-      showColorChangeFailed: false
+      showColorChangeFailed: false,
+      invalidSlashCommand: false
     }
   }
 
   componentDidMount() {
+    const { cookies } = this.props;
+    
+    checkIfUserExists({
+      username: this.state.username,
+      clientID: this.state.clientID
+    })
+
     subscribeToUserInfo((err, userInfo) => {
       this.setState({ username: userInfo.username,
                       color: "#" + userInfo.color,
                       clientID: userInfo.userID })
+      cookies.set('username', userInfo.username, {path: '/'})
+      cookies.set('usercolor', userInfo.color, { path: '/' })
+      cookies.set('clientID', userInfo.userID, {path: '/'})
     })
 
     subscribeNickNameChangeFailed((reason) => {
@@ -55,25 +70,32 @@ class App extends React.Component {
 
   onKeyPress(evt) {
     if(evt.key === "Enter") {
-      let nickChangeRegex = /^\/nick (.*)/
-      let nickChangeRegexArray = nickChangeRegex.exec(this.state.message)
+      let slashCommandRegex = /^\/(.*)/
+      let slashCommandRegexArray = slashCommandRegex.exec(this.state.message)
 
-      let nickChangeColorRegex = /^\/(nickcolor) (.*)/
-      let nickChangeColorRegexArray = nickChangeColorRegex.exec(this.state.message)
-      
-      if(nickChangeRegexArray !== null) {
-        requestToChangeNickName(nickChangeRegexArray[1])
-      } else if (nickChangeColorRegexArray !== null) {
-        let hexCodeRegex = /^([A-Fa-f0-9]{6})/
-        let hexCodeRegexArray = hexCodeRegex.exec(nickChangeColorRegexArray[2])
-
-        if (hexCodeRegexArray !== null) {
-          requestToChangeColor(hexCodeRegexArray[0])
+      if(slashCommandRegexArray !== null) {
+        let nickChangeRegex = /^\/nick (.*)/
+        let nickChangeRegexArray = nickChangeRegex.exec(this.state.message)
+  
+        let nickChangeColorRegex = /^\/(nickcolor) (.*)/
+        let nickChangeColorRegexArray = nickChangeColorRegex.exec(this.state.message)
+        
+        if(nickChangeRegexArray !== null) {
+          requestToChangeNickName(nickChangeRegexArray[1])
+        } else if (nickChangeColorRegexArray !== null) {
+          let hexCodeRegex = /^([A-Fa-f0-9]{6})/
+          let hexCodeRegexArray = hexCodeRegex.exec(nickChangeColorRegexArray[2])
+  
+          if (hexCodeRegexArray !== null) {
+            requestToChangeColor(hexCodeRegexArray[0])
+          } else {
+            this.setState({ showColorChangeFailed: true })
+          }
         } else {
-          this.setState({ showColorChangeFailed: true })
+          this.setState({ invalidSlashCommand: true })
         }
-
-      }else {
+      }
+      else {
         sendMessage({
           message: this.state.message,
           username: this.state.username,
@@ -95,6 +117,12 @@ class App extends React.Component {
   handleColorChangeFailedAlertClose() {
     this.setState({
       showColorChangeFailed: false,
+    })
+  }
+
+  handleInvalidSlashCommandAlertClose() {
+    this.setState({
+      invalidSlashCommand: false,
     })
   }
   
@@ -122,6 +150,11 @@ class App extends React.Component {
                 Color Change Failed: Command Format: /nickcolor RRGGBB
               </Alert>
             </Collapse>
+            <Collapse in={this.state.invalidSlashCommand}>
+              <Alert severity="error" onClose={() => this.handleInvalidSlashCommandAlertClose()}>
+                Invalid Slash Command
+              </Alert>
+            </Collapse>
           </div>
         </div>
       </div>
@@ -129,4 +162,4 @@ class App extends React.Component {
   }
 }
 
-export default App;
+export default withCookies(App);

@@ -29,8 +29,8 @@ let lastNames = [
   "Sloth"
 ]
 
-let currentUsers = []
-let userID = 0
+let allUsers = []
+let userIDGlobal = 0
 
 function generateUniqueName() {
   let foundUniqueName = false;
@@ -40,7 +40,7 @@ function generateUniqueName() {
     const lastName = lastNames[Math.floor(Math.random() * lastNames.length)];
   
     name = firstName + "-" + lastName;
-    if(!currentUsers.some(user => user.username === name)) {
+    if(!allUsers.some(user => user.username === name)) {
       foundUniqueName = true;
     }
   }
@@ -48,28 +48,73 @@ function generateUniqueName() {
   return name;
 }
 
-function emitUserInfo(client, username, usercolor, clientID) {
+function emitUserInfo(client, currentUser) {
   client.emit('userInfo', {
-    username: username,
-    color: usercolor,
-    userID: clientID,
+    username: currentUser.username,
+    color: currentUser.usercolor,
+    userID: currentUser.clientID,
   })
 }
 
-io.on('connection', (client) => {
-  let username = generateUniqueName()
-  let usercolor = Math.floor(Math.random() * 16777215).toString(16)
-  let clientID = userID++
-  currentUsers.push({
-    username: username,
-    userID: clientID
-  })
+function emitOnlineUsers() {
+  let onlineUsers = allUsers.filter(user => user.isOnline === true);
+  io.emit('userlist', onlineUsers)
+}
 
-  emitUserInfo(client, username, usercolor, clientID)
+function checkUsernameConflict(user, userInfo) {
+  let usernamesMatch = user.username === userInfo.username
+  let differentIDs = user.clientID !== parseInt(userInfo.clientID)
+  return (usernamesMatch && differentIDs)
+}
+
+io.on('connection', (client) => {
+
+  let clientUser = {
+    username: "",
+    usercolor: 000000,
+    clientID: -1,
+    isOnline: true,
+  }
 
   client.emit('messages', messages)
 
-  io.emit('userlist', currentUsers)
+  client.on('userInfoCheck', (userInfo) => {
+
+    let userID = parseInt(userInfo.clientID) 
+    
+    clientUser.usercolor = Math.floor(Math.random() * 16777215).toString(16)
+
+    if (allUsers.some(user => user.clientID === userID)) {
+      
+      // Verify names
+      let username = ""
+
+      if (allUsers.some(user => checkUsernameConflict(user, userInfo))) {
+          username = generateUniqueName()
+        } else {
+          username = userInfo.username
+        }
+      
+      // set user information
+      for (let i in allUsers) {
+        if (allUsers[i].clientID === userID) {
+          allUsers[i].username = username
+          allUsers[i].isOnline = true
+
+          clientUser = allUsers[i]
+        }
+      }
+    } else {
+        clientUser.username = generateUniqueName()
+        clientUser.clientID = userIDGlobal++
+        clientUser.isOnline = true
+        allUsers.push(clientUser)
+    }
+
+    emitOnlineUsers()
+
+    emitUserInfo(client, clientUser)
+  }) 
 
   client.on("newMessage", (message) => {
     let newMessage = {
@@ -77,44 +122,43 @@ io.on('connection', (client) => {
       username: message.username,
       color: message.color,
       message: message.message,
-      userID: clientID,
+      userID: clientUser.clientID,
     }
     messages.push(newMessage)
     io.emit('messages', messages)
   })
 
   client.on("changeNickNameRequest", (newNickName) => {
-    if (currentUsers.some(user => user.name === newNickName)) {
+    let onlineUsers = allUsers.filter(user => user.isOnline === true);
+    if (onlineUsers.some((user) => user.username === newNickName)) {
       client.emit('changeNickNameFailed', "This name is already taken")
     } else {
-      for (let i in currentUsers) {
-        if(currentUsers[i].username === username) {
-          currentUsers[i].username = newNickName
+      for (let i in allUsers) {
+        if(allUsers[i].username === clientUser.username) {
+          allUsers[i].username = newNickName
         }
       }
-      username = newNickName
+      clientUser.username = newNickName
 
-      emitUserInfo(client, username, usercolor, clientID)
-      io.emit('userlist', currentUsers)
+      emitUserInfo(client, clientUser)
+      emitOnlineUsers()
       
     }
   })
 
   client.on("changeNickColorRequest", (newColor) => {
-    usercolor = newColor;
-    emitUserInfo(client, username, usercolor, clientID)
+    clientUser.usercolor = newColor;
+    emitUserInfo(client, clientUser)
   })
 
   client.on('disconnect', () => {
-    let index = -1;
-    for (let i in currentUsers) {
-      if (currentUsers[i].userID === clientID) {
-        index = i;
+    for (let i in allUsers) {
+      if (allUsers[i].clientID === clientUser.clientID) {
+        allUsers[i].isOnline = false
       }
     }
 
-    if (index !== -1) currentUsers.splice(index, 1);
-    io.emit('userlist', currentUsers)
+    emitOnlineUsers()
   })
 });
 
