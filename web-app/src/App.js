@@ -22,7 +22,6 @@ class App extends React.Component {
   constructor(props) {
     super(props)
     const { cookies } = props;
-    console.log(cookies)
     this.state = {
       message: "",
       username: cookies.get('username') || "",
@@ -132,13 +131,15 @@ class App extends React.Component {
         <div className="chatbox">
           <MessagesComponent username={this.state.username} clientID={this.state.clientID}/>
           <UsersListComponent/>
-          <TextField 
-            className="userInput"
-            label="Message"
-            variant="outlined"
-            value={this.state.message}
-            onKeyPress={(evt) => this.onKeyPress(evt)}
-            onChange={(evt) => this.onMessageChange(evt)}/>
+          <div className="userInput">
+            <TextField 
+              style={{width: "100%"}}
+              label="Message"
+              variant="outlined"
+              value={this.state.message}
+              onKeyPress={(evt) => this.onKeyPress(evt)}
+              onChange={(evt) => this.onMessageChange(evt)}/>
+          </div>
           <div className="alerts">
             <Collapse in={this.state.showNameChangeFailed}>
               <Alert severity="error" onClose= {() => this.handleNameChangeFailedAlertClose()}>

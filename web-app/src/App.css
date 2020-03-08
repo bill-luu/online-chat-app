@@ -1,5 +1,6 @@
 .App {
   height: 100%;
+  color: #F1E8B8;
 }
 
 .chatbox {
@@ -12,8 +13,9 @@
   height: 80%;
   width: 80%;
   margin: auto;
+  margin-top: 2rem;
 
-  background: grey;
+  background: #D05353;
 }
 
 .messageBox {
@@ -30,9 +32,13 @@
 .userInput {
   grid-row: 2 / span 1;
   grid-column: 1 / span 3;
+  margin-left: 1rem;
+  margin-right: 1rem;
 }
 
 .alerts {
   grid-row: 3 / span 1;
   grid-column: 1 / span 3;
+  margin-left: 1rem;
+  margin-right: 1rem;
 }

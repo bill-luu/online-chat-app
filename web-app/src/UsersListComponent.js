@@ -4,7 +4,7 @@ import { subscribeToUsersList } from './api'
 
 function User(props) {
     return (
-        <div>
+        <div style={{paddingLeft: "10px"}}>
             <span>{props.user.username}</span>
         </div>
     )
@@ -27,11 +27,11 @@ class UsersListComponent extends React.Component {
     render() {
         return (
             <div className="usersListComponent">
-                <span>Users</span>
+                <span style={{paddingLeft: "5px"}}>Users</span>
                 <div className="users users-order">
                     {this.state.users.map(user => {
                         return (
-                            <User key={user.userID} user={user}></User>
+                            <User key={user.clientID} user={user}></User>
                         )
                     })}
                 </div>

@@ -4,11 +4,25 @@ import './index.css';
 import App from './App';
 import * as serviceWorker from './serviceWorker';
 import { CookiesProvider } from 'react-cookie'; 
+import { createMuiTheme, ThemeProvider } from '@material-ui/core/styles';
+
+const appTheme = createMuiTheme({
+    palette: {
+        primary: {
+            main: '#E58F65',
+        },
+        secondary: {
+            main: '#F9E784',
+        },
+    },
+})
 
 function Root() {
     return (
         <CookiesProvider>
-            <App/>
+            <ThemeProvider theme={appTheme}>
+                <App/>
+            </ThemeProvider>
         </CookiesProvider>
     )
 }
